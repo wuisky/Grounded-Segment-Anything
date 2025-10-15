@@ -1,9 +1,9 @@
 import argparse
+import json
 import os
 import sys
 
 import numpy as np
-import json
 import torch
 from PIL import Image
 
@@ -11,22 +11,19 @@ sys.path.append(os.path.join(os.getcwd(), "GroundingDINO"))
 sys.path.append(os.path.join(os.getcwd(), "segment_anything"))
 
 
+import cv2
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
 # Grounding DINO
 import GroundingDINO.groundingdino.datasets.transforms as T
 from GroundingDINO.groundingdino.models import build_model
 from GroundingDINO.groundingdino.util.slconfig import SLConfig
-from GroundingDINO.groundingdino.util.utils import clean_state_dict, get_phrases_from_posmap
-
-
+from GroundingDINO.groundingdino.util.utils import (clean_state_dict,
+                                                    get_phrases_from_posmap)
 # segment anything
-from segment_anything import (
-    sam_model_registry,
-    sam_hq_model_registry,
-    SamPredictor
-)
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
+from segment_anything import SamPredictor, sam_model_registry
 
 
 def load_image(image_path):
@@ -108,12 +105,36 @@ def show_box(box, ax, label):
     ax.text(x0, y0, label)
 
 
-def save_mask_data(output_dir, mask_list, box_list, label_list):
+def save_mask_data(output_dir, mask_list, box_list, label_list, image_size=None):
     value = 0  # 0 for background
 
     mask_img = torch.zeros(mask_list.shape[-2:])
     for idx, mask in enumerate(mask_list):
         mask_img[mask.cpu().numpy()[0] == True] = value + idx + 1
+
+    # resize
+    if image_size is not None:
+        mask_img_np = mask_img.numpy().astype(np.uint8)
+        mask_img_pil = Image.fromarray(mask_img_np)
+        print(f'image size: {image_size}')
+        mask_img_pil = mask_img_pil.resize(image_size, resample=Image.NEAREST)
+        print(f'image size: {mask_img_pil.size=}')
+        # mask_img_pil.save(os.path.join(output_dir, 'mask.jpg'))
+        plt.figure(figsize=(image_size[0] / 100, image_size[1] / 100), dpi=100)
+        plt.imshow(np.array(mask_img_pil), cmap='gray')
+        plt.axis('off')
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+        plt.savefig(os.path.join(output_dir, 'mask_resize.png'), bbox_inches='tight', pad_inches=0)
+
+        # plt.figure(figsize=(10, 10))
+        # plt.imshow(mask_img_pil)
+        # cmap = matplotlib.cm.get_cmap('jet')
+        # mask_img_color = cmap(mask_img_np / mask_img_np.max())[:, :, :3]  # RGBA→RGB
+        # mask_img_color = (mask_img_color * 255).astype(np.uint8)
+        # mask_img_color_pil = Image.fromarray(mask_img_color)
+        # mask_img_color_pil = mask_img_color_pil.resize(image_size, resample=Image.NEAREST)
+        # mask_img_color_pil.save(os.path.join(output_dir, 'mask.jpg'))
+
     plt.figure(figsize=(10, 10))
     plt.imshow(mask_img.numpy())
     plt.axis('off')
@@ -239,4 +260,4 @@ if __name__ == "__main__":
         bbox_inches="tight", dpi=300, pad_inches=0.0
     )
 
-    save_mask_data(output_dir, masks, boxes_filt, pred_phrases)
+    save_mask_data(output_dir, masks, boxes_filt, pred_phrases, size)
