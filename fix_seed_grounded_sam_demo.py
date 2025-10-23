@@ -116,6 +116,7 @@ def save_mask_data(output_dir, mask_list, box_list, label_list, image_size=None)
         plt.figure(figsize=(image_size[0] / 100, image_size[1] / 100), dpi=100)
         plt.imshow(np.array(mask_img_pil), cmap="gray")
         plt.axis("off")
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
         plt.savefig(os.path.join(output_dir, "mask_resize.png"), bbox_inches="tight", pad_inches=0)
 
     plt.figure(figsize=(10, 10))
