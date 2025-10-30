@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>Grounded-Segment-Anything</name>
+  <version>0.0.1</version>
+  <description>Grounded-Segment-Anything</description>
+  <maintainer email="wu.menghung@jp.panasonic.com">Wu Menghung</maintainer>
+  <license>TODO: License declaration</license>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
