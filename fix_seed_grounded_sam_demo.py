@@ -20,9 +20,9 @@ from GroundingDINO.groundingdino.util.utils import clean_state_dict, get_phrases
 from segment_anything import SamPredictor, sam_model_registry
 
 # =====================================================
-# ✅ 再現性を完全に固定するための初期化関数
+# 再現性を完全に固定するための初期化関数.cpu限定
 # =====================================================
-def set_deterministic(seed: int = 0):
+def set_deterministic(seed: int = 0, device: str = 'cpu'):
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
@@ -30,10 +30,10 @@ def set_deterministic(seed: int = 0):
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-    torch.use_deterministic_algorithms(True)
+    if device == 'cpu':
+        torch.use_deterministic_algorithms(True)
     torch.set_float32_matmul_precision("high")
 
-set_deterministic(0)
 # =====================================================
 
 
@@ -155,6 +155,8 @@ if __name__ == "__main__":
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--bert_base_uncased_path", type=str, required=False)
     args = parser.parse_args()
+
+    set_deterministic(0, args.device)
 
     os.makedirs(args.output_dir, exist_ok=True)
     image_pil, image = load_image(args.input_image)
